@@ -4,7 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#0284c7">
-  <title>Computing Attendance Tracker</title>
+  <title>Attend Comp</title>
+
+  <!-- iOS / Apple Home Screen Name & Icon Support -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Attend Comp">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
   <!-- PWA Manifest & Icons -->
   <link rel="manifest" href="manifest.json">
@@ -12,6 +17,17 @@
   <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
   <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
   <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png">
+
+  <!-- Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then((reg) => console.log('Service Worker registered:', reg.scope))
+          .catch((err) => console.error('Service Worker registration failed:', err));
+      });
+    }
+  </script>
 
   <style>
     :root {
@@ -309,7 +325,6 @@
   </div>
 
   <script>
-    // PASTE YOUR COMPUTING APPS SCRIPT WEB APP URL HERE:
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzI2zVrJaSs9nzZOyqrrKBmT7nKezED8uIPDh4Q3Gr0FWQkhgNq4Lk5zlFvQQtxePmw/exec";
 
     const defaultRosters = {
