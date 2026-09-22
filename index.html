@@ -345,7 +345,17 @@
       "V/A 2": ["Benedicta Agyapong", "Bismark Appiah", "Bright Owusu", "Dennis Appiah", "Desmond Amoako", "Emmanuel Arthur", "Emmanuel Joel Mensah", "Frederick . Yawson", "Frederick Osei", "Isaac Forson Mensah", "Ishmael Amissah", "Kenneth Aidoo", "Meshack Andoh", "Mesharck Odame", "Nancy Edusah", "Nasiru Yusif", "Nectarios Asamoah", "Obed Acquah", "Precious Osei", "Prince Hackman", "Raphael Dadzie", "Richard Ametepey", "Shadrack Kusi", "Wendy Sam", "William P.K. Obeng"]
     };
 
-    let classRosters = JSON.parse(localStorage.getItem('computing_rosters')) || defaultRosters;
+    // Load from local storage, or fallback to updated default roster
+    const storedRostersVersion = "2025_2026_portal_v1";
+    let classRosters;
+
+    if (localStorage.getItem('computing_rosters_ver') !== storedRostersVersion) {
+      classRosters = defaultRosters;
+      localStorage.setItem('computing_rosters', JSON.stringify(defaultRosters));
+      localStorage.setItem('computing_rosters_ver', storedRostersVersion);
+    } else {
+      classRosters = JSON.parse(localStorage.getItem('computing_rosters')) || defaultRosters;
+    }
 
     Object.keys(classRosters).forEach(cls => {
       classRosters[cls].sort((a, b) => a.localeCompare(b));
