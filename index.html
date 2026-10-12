@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#0284c7">
+  <meta name="theme-color" content="#0369a1">
   <title>Attend Comp</title>
 
   <!-- iOS / Apple Home Screen Name & Icon Support -->
@@ -11,8 +11,10 @@
   <meta name="apple-mobile-web-app-title" content="Attend Comp">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
-  <!-- PWA Manifest & Icons -->
+  <!-- PWA Manifest -->
   <link rel="manifest" href="manifest.json">
+
+  <!-- Favicon and App Icons -->
   <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
   <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
   <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png">
@@ -72,9 +74,16 @@
       color: #0369a1;
       font-size: 0.8rem;
       font-weight: 700;
-      padding: 3px 12px;
+      padding: 3px 14px;
       border-radius: 9999px;
       letter-spacing: 0.5px;
+    }
+
+    .sync-status {
+      font-size: 0.75rem;
+      color: #64748b;
+      margin-top: 4px;
+      display: block;
     }
 
     .form-group {
@@ -264,6 +273,7 @@
   <div class="header">
     <h1>Student Attendance</h1>
     <span class="subject-pill">COMPUTING</span>
+    <span class="sync-status" id="cloudSyncStatus">Checking cloud roster...</span>
   </div>
 
   <div class="form-group">
@@ -282,7 +292,6 @@
     </select>
   </div>
 
-  <!-- Total Students Display Box -->
   <div class="enrolment-badge" id="enrolmentBadge" style="display: none;">
     <span class="label-text">Total Students:</span>
     <span class="count-number" id="enrolmentCount">0</span>
@@ -303,7 +312,7 @@
         <button type="button" class="btn-add" onclick="addStudent()">Add</button>
       </div>
       <p style="font-size: 0.75rem; color: #64748b; margin-top: 8px;">
-        Tap <strong>✕</strong> beside any name to remove them. Tap <strong>⚙️ Manage Students</strong> again when finished.
+        Delete buttons (<strong>✕</strong>) are visible beside each student below. Tap <strong>✕</strong> to remove a student and sync the removal to the cloud. Tap <strong>⚙️ Manage Students</strong> again when finished to hide them.
       </p>
     </div>
 
@@ -319,28 +328,46 @@
   </div>
 
   <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzFELGd59XruCTsLb-Adl67r6sDPmVlC5VFEPmcEoeF1Nff-g2VVyF9qkU7kshgR01t/exec";
+    // PASTE YOUR COMPUTING APPS SCRIPT WEB APP URL HERE:
+    const SCRIPT_URL = "PASTE_YOUR_COMPUTING_WEB_APP_URL_HERE";
 
     const defaultRosters = {
-      "AGRIC": ["Albert Nanayaw Botwey", "Alfred Nkrumah", "Amanda Soforye Mawunyo", "Antoinette Acquah", "Asante Yeboah", "Belinba Owusu Boateng", "Benjamin", "Bright Osei Mensah", "Daniel Botwey", "Deborah Mensah", "Doris Odoom", "Ebenezer Arthur", "Elvis Kyei Baffour", "Emmanuel Lamptey", "Emmanuel Manu", "Ernest Yamoah", "Esther Arkoh", "Francis Amoh", "Gifty Baah Marfo", "Gladys Agyekum", "Gloria Eshun", "Gloria Oppong", "Goodluck Nichie", "Isaac Mensah", "Issah Rashid", "Joel Pascal Ofosu", "Karen Owusuwaa Afum", "Kingsley Affel", "Patrick Acquah", "Priscilla Arthur Yeboah", "Richard Ansah Yeboah", "Richard Opare", "Sampson Baah", "Samuel Dadzie", "Sandra Yeboah", "Thomas Mensah", "Vera Nsowah Kyei Baffour", "Victoria Acheampong", "William Anaman Badu"],
-      "ARTS 1": ["Augustina Dzidedi Azaloo", "Benedicta Ahianyo", "Blessing Kumah", "Catherine Kekeli Atitso", "Christbel Asante Gyamfuwaa", "Christian Laweh Kussiedu", "Christiana Mawusi", "Clifford Sei Jorbuno", "Daniel Adjei", "Desmond Ntim", "Dora Robertson", "Edna Atamale Lamisi", "Edward Asante Ossew", "Edward Bediako", "Edwin Asante Ossew", "Elizabeth Yeboah", "Emily Baidoo Idun", "Emmanuel Botchway", "Emmanuel Quainoo", "Emmanuella Aidoo Ayeh", "Enoch Okaitei Nettey", "Essel Ekoa", "Esther Clottey", "Esther Yevu", "Eunice Emedume", "Evans Kwegyir", "Evans Mensah", "Felix Quainoo", "Fuseini Yasminatu", "Georgina Frimpong", "Gerrard Mensah Botwey", "Gifty Nhyiraba Aggrey", "Grace Sackey Twumwaa", "Isabella Dumenya V.K.Y.", "James Donkoh", "Jessica Amoasi", "Joana Appiah", "Joana Mensah", "Joana Nhyira", "Judith Zuvile Kuunibe", "Justice Lamptey", "Kate Baffoe Antwi", "Leticia Korankyewaa Entsil", "Mary Marriam", "Mohammed Karimatu", "Nicholas Arhin", "Obed Ampadu Senior", "Paulina Akua Akyaa Danso", "Priscilla公告 Agyapong", "Priscilla Amoah", "Priscilla Dadzie", "Regina Afful", "Richard Atwer", "Rita Egbuaba Amara", "Rosalinda Obosu", "Sadia Duda", "Samuel Mensah Boadu", "Silas Abban", "Sophia Intsiful", "Stephanie Aggrey", "Syria Osei", "Vera Mensah", "Vincent Baah", "Vincentia Baidoo Prah", "Winifred Takyi", "Zurfawa Mohammed Ngisah"],
-      "ARTS 2A": ["Abigail Nhyira Boatemaa Lyei", "Abraham Korankye Boafo", "Barikisu Badua Acquah", "Beatrice Ackaah", "Bismark Gyamfi", "Blessing Kyerewa Yawson", "Christabel Botchwey", "Cindy Arthur", "Daisy Kafaru", "Dorothy Klutse", "Elizabeth Barbara Antwiwaa", "Emelia Egyir", "Emmanuel Baidoo", "Enock Ayiah", "Eric Adikah", "Erica Baryee Alice Slewro Morris", "Esther Nifa Amoanoo", "Evelyn Acquah", "Evelyn Antwiwaah Agyemang Botah", "Gideon Ackwerh", "Henry Affrim Nyamekye Junior", "Isaac Adjei", "Jacob Akueteh Nunoo", "Jajah Hafsatu Mutawakilu", "Jennifer Mills", "Jessica Lamptey", "Joseph Appiah Mensah", "Kingsford Asamoah", "Lydia Koomson", "Mary Nkpanbi", "Paintsil Edna", "Priscilla Gbegbewu", "Razak Andelatu", "Stephen Arthur", "Sylvester Dadzie", "Williams Yayra", "Winnifred Eduah Mensah", "Yussif Danjumah"],
-      "ARTS 2B": ["Annabel Lamptey", "Bismark Otabil", "Blessing Lamptey", "Bright Ohene", "Celestina Mensah", "Charlotte Adu Apoh", "Chris Amoama", "Christabel Opoku", "Cornelius Biney", "David Annan", "Emmanuel Aidoo", "Esther Oboh", "Eugene Timo", "Eunice Allotey", "Florence Abano", "Gifty Arthur", "Gifty Kwakye", "Gladys Owusu Ansah", "Henry Baidoo", "Henry Osei Mensah", "Hilary Manson", "Isaac Amenuvor", "Ivy Tsibu Affiamoah", "Jessica Affoh", "Jessica Mawutor", "Joseph Harrison Eshun", "Justice Appau", "Leticia Abekah Ennin", "Linda Arthur", "Martha Eyram Atakpa", "Mary Afia Mensah", "Mary Oku Mensah", "Mary Quainoo", "Maybel Annor", "Nancy Nana Yaa Donkor", "Nora Naa Ayeley Armah", "Prince Amanfo", "Priscilla A Asampana", "Regina Coffie", "Richard Begyina", "Richmond Elisha Owusu Akyaw", "Richmond Ohene", "Ruth Ayensu", "Samiratu Awudu", "Sampson Essuman", "Sheriff Nkum", "Stephen Asare", "Vera Yaa Eyram Tsatsu", "Victoria Enyonam Darkoh", "Yvonne Yeboah"],
-      "ARTS 4": ["Abigail Aboagyewaa Etsir", "Alice Ewusi", "Anita Danso", "Augustine Baako Baah", "Cecilia Amoasi", "Cecilia Asante", "Charlotte Offei", "Christabel Andoh", "Dennis Boduah", "Elizabeth Edufuwah", "Elizabethe Lardje", "Esther Eyiah", "Eva Botwe", "Immaculate Nyarkoah Baidoo", "Irene Boateng", "Jamila Botchwey", "Joyce Oboh", "Kingsley Asamoah", "Mercy Frimpong", "Monica Eyi", "Patrick Anafo", "Portia Mfum", "Portia Ofori", "Theresah Appiah"],
-      "LANG": ["Doezier Yawson", "Edith De-Vos Quarshie", "Helina Tawiah", "Suzana Mensah"],
-      "SCI": ["Ali Nuhu", "Bless Ntow Asare", "Clifford Affranie", "Deborah Owusu Arthur", "Desmond Aidoo", "Dominic Agyapong", "Elizabeth Owusu", "Emelia Mensah", "Emmanuel Baidoo", "Emmanuel Essel", "Grace Nana Aba Acquah", "James Quansah", "Jessica Afadzie Nkum", "Joseph Baffoe", "Magret Longdon Oppong", "Majid Abdul Safyam", "Margaret Essiamah", "Mariana Sonia Acquah", "Matilda Dovlo", "Patricia Serwaa Amoako", "Prince Kwarteng", "Princess Selasi Seddoh", "Rachael Visu", "Samuel Nii Aryee Armaah", "Solomon S.K. Gyasi Jnr", "Stephanie Konadu Gaisie"],
-      "V/A 1": ["Abraham Mensah", "Alfred Nyarkoh", "Ampong Korankye", "Bernard Danso", "Charity Mbeah", "Christopher Kwaku Kakraba Enchill", "David Kweku Mensah", "Evans Odugbe", "Felix Ahoto Anyan", "Francis Essel", "Gabriel Debrah", "Gideon Blankson", "Hayfoed Kwaku Adzadzi", "Ibraheem Adam", "Isaac Kitsaba", "Kobina Sarfo", "Manuel Badu", "Maxwell Obeng", "Nathaniel Quansah", "Obed Ampadu Junior", "Othneal Boateng", "Paul Antwi", "Philip Addo", "Prosper Appo", "Rudolf Gyankye", "Samuel Saglah"],
-      "V/A 2": ["Benedicta Agyapong", "Bismark Appiah", "Bright Owusu", "Dennis Appiah", "Desmond Amoako", "Emmanuel Arthur", "Emmanuel Joel Mensah", "Frederick . Yawson", "Frederick Osei", "Isaac Forson Mensah", "Ishmael Amissah", "Kenneth Aidoo", "Meshack Andoh", "Mesharck Odame", "Nancy Edusah", "Nasiru Yusif", "Nectarios Asamoah", "Obed Acquah", "Precious Osei", "Prince Hackman", "Raphael Dadzie", "Richard Ametepey", "Shadrack Kusi", "Wendy Sam", "William P.K. Obeng"]
+      "AGRIC": [
+        "Abbam Godfred", "Acquah Antoinette", "Acquah Benjamin", "Acquah Patrick", "Affel Kingsley", "Agyekum Gladys", "Agyempong Victoria", "Aidoo Angela", "Amoah Francis", "Ansah Bright", "Ansah Teboah Richard", "Arko Esther", "Arthur Ebenezer", "Arthur Teboah Priscilla", "Atum Ohenewa Kareem", "Baah Mario Gift", "Baah Samson", "Badu Anaman William", "Badur Kyei Ellis", "Boateng Owusu Belinda", "Botwey Albert Nana Yaw", "Botwey Daniel", "Dadzie Samuel", "Eshun Gloria", "Gamba Richard", "Kyei Baffour Elvis", "Lamptey Emmanuel", "Manu Emmanuel", "Mawunyo Soforye Amanda", "Mensah Bright Osei", "Mensah Deborah", "Mensah Isaac", "Mensah Thomas", "Nichie Goodluck", "Nkrumah Alfred", "Nsowah Kyei Baffour Vera", "Odoom Doris", "Ofosu Joel Pascal", "Opare Richard", "Oppong Gloria", "Owusu Boateng Belinba", "Owusuwaa Afum Karen", "Rashid Issah", "Yamoah Ernest", "Yeboah Asante Kweku"
+      ],
+      "ARTS 1": [
+        "Abban Silas", "Adjei Daniel", "Afful Regina", "Aggrey Gifty Nhyiraba", "Aggrey Stephanie", "Agyapong Priscilla", "Ahianyo Benedicta", "Aidoo Emmanuella Ayeh", "Amedume Eunice", "Amoah Ebenezer", "Amoah Priscilla", "Amoasi Jessica", "Ampadu Obed Senior", "Anowah Theresah", "Appiah Joana", "Arhin Nicholas", "Arthur Emmanuel", "Asante Christabel Gyamfuwaa", "Asante Edwin Osew", "Atamale Edna Lamisi", "Atitso Catherine Kekeli", "Atwer Richard", "Azaloo Augustina Dzidedi", "Baah Vincent", "Baidoo Emily Idun", "Baidoo Vincentia Prah", "Baffoe Antwi Kate", "Bediako Edward", "Boadu Samuel Mensah", "Botchway Emmanuel", "Clottey Esther", "Dadzie Priscilla", "Danso Paulina Akua Akyaa", "Donkoh James", "Duda Sadia", "Dumenya Isabella V.K.Y.", "Egbuaba Rita Amara", "Entsil Leticia Korankyewaa", "Ekoa Essel", "Frimpong Georgina", "Gerrard Botwey Mensah", "Intsiful Sophia", "Jorbuno Clifford Sei", "Kuunibe Judith Zuvile", "Kumah Blessing", "Kussiedu Christian Laweh", "Kwegyir Evans", "Lamptey Justice", "Marriam Mary", "Mawusi Christiana", "Mensah Evans", "Mensah Joana", "Mensah Vera", "Mohammed Karimatu", "Nettey Enoch Okaitei", "Nhyira Joana", "Ntim Desmond", "Obosu Rosalinda", "Osei Syria", "Ossew Edward Asante", "Quainoo Emmanuel", "Quainoo Felix", "Robertson Dora", "Takyi Winifred", "Twumwaa Sackey Grace", "Yamoah Kwamena Evans", "Yasminatu Fuseini", "Yeboah Elizabeth", "Yevu Esther", "Yusif Gifty", "Zurfawu Mohammed"
+      ],
+      "ARTS 2A": [
+        "Ackaah Beatrice", "Ackwerh Gideon", "Acquah Barikisu Badua", "Acquah Evelyn", "Adikah Eric", "Adjei Isaac", "Affrim Henry Nyamekye JNR.", "Agyemang Evelyn Botah Antwiwaah", "Agyir Emelia", "Aidoo John", "Amuzu Phannuel", "Anim Alfreda Ohemaa", "Antwiwaa Elizabeth Barbara", "Appiah Emmanuel", "Arthur Cindy", "Arthur Stephen", "Asamoah Kingsford", "Asante-Acquah Joel", "Asare Joshua", "Aseidu Prince Mensah", "Ayiah Enock", "Baidoo Emmanuel", "Boafo Abraham Korankye", "Boatemaa Abigail Lyei Nhyira", "Botchwey Christabel", "Dadzie Sylvester", "Danjumah Yussif", "Gyamfi Bismark", "Kafaru Daisy", "Klutse Dorothy", "Koomson Lydia", "Lamptey Jessica", "Manson Hilary", "Mensah Joseph Appiah", "Mensah Winnifred Eduah", "Mills Jennifer", "Morris Erica Baryee Alice Slewro", "Mutawakilu Jajah Hafsatu", "Ndego Faustina", "Nifa Esther Amoanoo", "Nkpanbi Mary", "Nunoo Jacob Akueteh", "Ofori Edwina", "Paintsil Edna", "Razak Andelatu", "Taylor Mary", "Williams Yayra", "Yawson Blessing Kyerewa", "Yeboah Comfort", "Yeboah Ernest", "Yeboah Prince", "Yussif Danjumah"
+      ],
+      "ARTS 2B": [
+        "Abano Florence", "Abeka Ennin Leticia", "Adiako Felix", "Adu Apoh Charlotte", "Affiamoah Ivy Tsibu", "Affoh Jessica", "Aidoo Emmanuel", "Akyaa Owusu Edmunds", "Aleloey Elinice", "Amadako Harriet", "Amare Prince", "Amenuvor Isaac", "Amoah Thomas", "Amoama Chris", "Annah David", "Annor Maybel", "Appau Justice", "Armah Noara N.A", "Armah Nora N.A", "Asampana Priscilla A.", "Asare Stephen", "Atakpa Martha Eyram", "Awudu Samiratu", "Ayensu Ruth", "Baidoo Henry", "Begyina Richard", "Biney Cornelius", "Coffie Regina", "Darkoh Victoria Enyonam", "Donkor Nancy Nana Yaa", "Eshun Joseph Harrison", "Essuman Sampson", "Kwakye Gifty", "Lamptey Annabel", "Lamptey Blessing", "Mawutor Jessica", "Mensah Celestina", "Mensah Henry Osei", "Mensah Mary", "Mensah Mary Afia", "Mensah Mary Oku", "Nkum Sheriff", "Oboh Esther", "Ohene Bright", "Ohene Richmond", "Opoku Christabel", "Otabil Bismark", "Owusu Ansah Gladys", "Owusu Richmond Elisha Akyaw", "Quainoo Mary", "Timo Eugene", "Tsatsu Vera Yaa Eyram", "Yeboah Christiana", "Yeboah Jennifer", "Yeboah Yvonne"
+      ],
+      "ARTS 4": [
+        "Aboagyewaa Abigail Eteir", "Amoasi Cecilia", "Anafo Patrick", "Andoh Christabel", "Appiah Theresah", "Asamoah Kingsley", "Asante Cecilia", "Badu Augustine Boako", "Baidoo Emmaculate Nyarkoah", "Boateng Irene", "Boduah Dennis", "Botchwey Jamila", "Danso Anita", "Edufuwaah Elizabeth", "Ewusi Alice", "Eyi Monica", "Eyia Okyerewaah Esther", "Frimpong Mercy", "Larde Elizabeth", "Mfum Portia", "Oboh Joyce", "Offei Charlotte", "Ofori Portia"
+      ],
+      "LANG": [
+        "Akaljga Elizabeth Nana Yaa", "Eshun Comfort", "Gantara Najat", "Mensah Suzana", "Ofori Mary", "Quarshie Edith De-Vos", "Sumaila Ayishatu", "Tawiah Helina", "Yawson Doeziar"
+      ],
+      "SCI": [
+        "Abdul Majid Safian", "Acquah Grace Nana Aba", "Addy Gabriel", "Afranie Clifford", "Agypong Dominic", "Aidoo Desmond", "Amoako Patricia", "Armah Samuel", "Arthur Deborah O", "Asare Bless", "Baidoo Emmanuel", "Dovlo Matilda", "Essel Emmanuel", "Essiamah Margaret", "Gyasie Solomon", "Konadu Stephanie", "Kwarteng Prince", "Mensah Emelia", "Nuhu Ali", "Oppong Margaret Longdon", "Seddoh Princess Selasi", "Visu Reahael"
+      ],
+      "V/A 1": [
+        "Adam Ibraheem", "Addae Ebenezer", "Addo Philip", "Adzadzi Hayford Kwaku", "Agordzo Christiana", "Aidoo Theophilus", "Ampaadu Obed Juniour", "Ampah Emmanuel Kwaku", "Ampong Korankye", "Antwi Fosu Meckizadick", "Antwi Paul", "Anyan Felix", "Appo Prosper", "Awotwe Isaac", "Badu Manuel", "Baiden Raymond", "Blankson Gideon", "Boateng Edward", "Boateng Oathaniel", "Danso Bernard", "Debrah Gabriel", "Enchill Christopher K. Kakraba", "Essel Francis", "Gyankye Rudolf", "Kitsaba Isaac", "Mbeah Charity", "Mensah Abraham", "Mensah David Kweku", "Mensah Isaac", "Mensah Stephen", "Nyarkoh Alfred", "Obeng Maxwell", "Odugbe Evans", "Quansah Nathaniel", "Saglah Samuel", "Sarfo Kobina", "Tieky Gideon"
+      ],
+      "V/A 2": [
+        "Adu Michael", "Agyah Obed", "Agyapong Benedicta", "Aidoo Kenneth", "Ameky Richard", "Ametepey Richard", "Amissah Ishmael", "Amoah Albert", "Amoako Desmond", "Andoh Meshack", "Appiah Bismark", "Appiah Dennis", "Arthur Emmanuel", "Asamoah Nectarios", "Baidoo Patrick", "Bedor Patrick", "Botwey Ernest", "Dadzie Raphael", "Darko Julius", "Edusah Nancy", "Hackman Prince", "Kusi Shadrack", "Mensah Emmanuel Joel", "Mensah Isaac", "Obeng William P.K.", "Odame Mesharck", "Ofori Prince", "Okyere Stephen", "Osei Frederick", "Osei Precious", "Owusu Bright", "Sam Wendy", "Sarpong Dennis", "Yawson Frederick", "Yusif Nasiru"
+      ]
     };
 
-    // Bump version key so older cache in localStorage clears automatically
-    const storedRostersVersion = "2025_2026_comp_only_v2";
+    const ROSTER_VERSION = "2025_2026_comp_portal_v2";
     let classRosters;
 
-    if (localStorage.getItem('computing_rosters_ver') !== storedRostersVersion) {
+    if (localStorage.getItem('computing_rosters_ver') !== ROSTER_VERSION) {
       classRosters = defaultRosters;
       localStorage.setItem('computing_rosters', JSON.stringify(defaultRosters));
-      localStorage.setItem('computing_rosters_ver', storedRostersVersion);
+      localStorage.setItem('computing_rosters_ver', ROSTER_VERSION);
     } else {
       classRosters = JSON.parse(localStorage.getItem('computing_rosters')) || defaultRosters;
     }
@@ -352,6 +379,33 @@
     function saveRostersLocally() {
       localStorage.setItem('computing_rosters', JSON.stringify(classRosters));
     }
+
+    // CLOUD FETCH ROUTINE: Automatically fetches live rosters from Google Sheet
+    async function syncRosterFromCloud() {
+      const statusEl = document.getElementById('cloudSyncStatus');
+      try {
+        const response = await fetch(SCRIPT_URL);
+        const cloudData = await response.json();
+
+        if (cloudData && typeof cloudData === 'object' && Object.keys(cloudData).length > 0) {
+          Object.keys(cloudData).forEach(cls => {
+            if (Array.isArray(cloudData[cls]) && cloudData[cls].length > 0) {
+              classRosters[cls] = cloudData[cls].sort((a, b) => a.localeCompare(b));
+            }
+          });
+          saveRostersLocally();
+          if (statusEl) statusEl.innerText = "☁️ Roster synced with cloud";
+          renderStudents();
+        } else {
+          if (statusEl) statusEl.innerText = "";
+        }
+      } catch (err) {
+        console.log("Using cached offline roster:", err);
+        if (statusEl) statusEl.innerText = "📱 Offline mode (using local roster)";
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', syncRosterFromCloud);
 
     let absentSet = new Set();
     document.getElementById('datePicker').value = new Date().toISOString().split('T')[0];
@@ -370,7 +424,7 @@
       }
     }
 
-    function addStudent() {
+    async function addStudent() {
       const selectedClass = document.getElementById('classSelect').value;
       const input = document.getElementById('newStudentName');
       const name = input.value.trim();
@@ -394,12 +448,30 @@
         return;
       }
 
+      // 1. Add locally immediately
       classRosters[selectedClass].push(name);
       classRosters[selectedClass].sort((a, b) => a.localeCompare(b));
-
       saveRostersLocally();
       input.value = "";
       renderStudents();
+
+      // 2. Sync new student to the Google Sheet cloud roster
+      try {
+        fetch(SCRIPT_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "add_student",
+            class: selectedClass,
+            studentName: name
+          })
+        });
+        const statusEl = document.getElementById('cloudSyncStatus');
+        if (statusEl) statusEl.innerText = `☁️ "${name}" synced to cloud roster`;
+      } catch (err) {
+        console.error("Failed to push student to cloud:", err);
+      }
     }
 
     function removeStudent(event, name) {
@@ -410,10 +482,29 @@
         return;
       }
 
+      // 1. Remove locally immediately
       classRosters[selectedClass] = classRosters[selectedClass].filter(s => s !== name);
       absentSet.delete(name);
       saveRostersLocally();
       renderStudents();
+
+      // 2. Sync removal with Google Sheets Roster tab
+      try {
+        fetch(SCRIPT_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "remove_student",
+            class: selectedClass,
+            studentName: name
+          })
+        });
+        const statusEl = document.getElementById('cloudSyncStatus');
+        if (statusEl) statusEl.innerText = `☁️ "${name}" removed from cloud roster`;
+      } catch (err) {
+        console.error("Failed to sync removal to cloud:", err);
+      }
     }
 
     function renderStudents() {
